@@ -29,18 +29,18 @@ def accuracy_reward(predict: str, ground_truth: str) -> float:
     return 1.0 if grade_answer(answer, ground_truth) else 0.0
 
 
-def compute_score(predicts: List[str], ground_truths: List[str], format_weight: float = 0.1) -> List[Dict[str, float]]:
-    scores = []
-    for predict, ground_truth in zip(predicts, ground_truths):
-        predict = re.sub(r"\s*(<|>|/)\s*", r"\1", predict)  # handle qwen2.5vl-32b format
-        format_score = format_reward(predict)
-        accuracy_score = accuracy_reward(predict, ground_truth)
-        scores.append(
-            {
-                "overall": (1 - format_weight) * accuracy_score + format_weight * format_score,
-                "format": format_score,
-                "accuracy": accuracy_score,
-            }
-        )
 
-    return scores
+def compute_score(predict_str: str, ground_truth: str, format_weight: float = 0.0) -> Dict[str, float]:
+    # predict_str = re.sub(r"\s*(<|>|/)\s*", r"\1", predict_str)  # handle qwen2.5vl-32b format
+    format_score = format_reward(predict_str)
+    accuracy_score = accuracy_reward(predict_str, ground_truth)
+    return {
+        "overall": (1 - format_weight) * accuracy_score + format_weight * format_score,
+        "format": format_score,
+        "accuracy": accuracy_score,
+    }
+    
+if __name__ == "__main__":
+    predict_str = r"\\boxed{2}"
+    ground_truth = r"\\boxed{1}"
+    print(compute_score(predict_str, ground_truth))
