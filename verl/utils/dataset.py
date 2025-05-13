@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from jinja2 import Template
 from PIL import Image
 from PIL.Image import Image as ImageObject
@@ -114,9 +114,9 @@ class RLHFDataset(Dataset, ImageProcessMixin):
 
         if os.path.isdir(data_path):
             # when we use dataset builder, we should always refer to the train split
-            self.dataset = load_dataset("parquet", data_dir=data_path, split="train")
+            self.dataset = load_from_disk(os.path.join(data_path, data_split))
         elif os.path.isfile(data_path):
-            self.dataset = load_dataset("parquet", data_files=data_path, split="train")
+            self.dataset = load_from_disk(os.path.join(data_path, data_split))
         else:
             # load remote dataset from huggingface hub
             self.dataset = load_dataset(data_path, split=data_split)

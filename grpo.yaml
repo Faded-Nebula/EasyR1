@@ -1,0 +1,90 @@
+data:
+  train_files: './data/rl/open-r1-prefix/prefix_0@train'
+  val_files: './data/rl/open-r1-prefix/prefix_0@test'
+  prompt_key: problem
+  max_prompt_length: 1024
+  max_response_length: 8192
+  rollout_batch_size: 512
+  val_batch_size: 1024
+  # format_prompt: ./examples/format_prompt/math_format.jinja
+  shuffle: true
+  seed: 1
+  max_pixels: 4194304
+  min_pixels: 262144
+  filter_overlong_prompts: true
+
+algorithm:
+  adv_estimator: grpo
+  disable_kl: false
+  use_kl_loss: true
+  kl_penalty: low_var_kl
+  kl_coef: 1.0e-3
+
+worker:
+  actor:
+    global_batch_size: 128
+    micro_batch_size_per_device_for_update: 4
+    micro_batch_size_per_device_for_experience: 16
+    max_grad_norm: 1.0
+    use_kl_loss: true
+    kl_coef: 1.0e-3
+    kl_penalty: low_var_kl
+    padding_free: true
+    ulysses_sequence_parallel_size: 1
+    model:
+      model_path: '/cephfs/zaiwen/DeepSeek-R1-Distill-Qwen-1.5B-RL-open-r1-prefix/prefix-0-context-2000-date-4-26/global_step_95/actor/huggingface'
+      enable_gradient_checkpointing: true
+    optim:
+      lr: 1.0e-6
+      weight_decay: 1.0e-2
+      strategy: adamw_bf16
+    fsdp:
+      enable_full_shard: true
+      enable_cpu_offload: false
+      enable_rank0_init: true
+      torch_dtype: bf16
+    offload:
+      offload_params: false
+      offload_optimizer: false
+
+  rollout:
+    n: 8
+    temperature: 1.0
+    top_p: 0.99
+    gpu_memory_utilization: 0.9
+    enforce_eager: false
+    enable_chunked_prefill: false
+    tensor_parallel_size: 2
+    limit_images: 0
+    val_override_config:
+      temperature: 0.5
+      n: 5
+    max_num_batched_tokens: 10240
+
+  ref:
+    offload:
+      offload_params: false
+    fsdp:
+      enable_full_shard: true
+      enable_cpu_offload: false
+      enable_rank0_init: true
+      torch_dtype: bf16
+
+  reward:
+    reward_type: function
+    reward_function: /root/EasyR1/examples/reward_function/math.py:compute_score
+
+trainer:
+  total_episodes: 15
+  logger: ["console", "wandb"]
+  project_name: DeepSeek-R1-Distill-Qwen-1.5B-RL-open-r1-prefix
+  experiment_name: prefix-0-context-8000-date-5-1
+  n_gpus_per_node: 8
+  nnodes: 1
+  save_freq: 5 
+  save_limit: -1
+  val_freq: 5
+  val_before_train: true
+  val_only: false
+  val_generations_to_log: 1
+  save_checkpoint_path: /cephfs/zaiwen/DeepSeek-R1-Distill-Qwen-1.5B-RL-open-r1-prefix/prefix-0-context-8000-date-5-1

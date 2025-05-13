@@ -289,6 +289,8 @@ class RayPPOTrainer:
                     non_tensor_batch_keys=["raw_prompt_ids", "multi_modal_data"],
                 )
             else:
+                n_val_samples = self.config.actor.rollout.val_override_config.n
+                test_batch = test_batch.repeat(repeat_times=n_val_samples, interleave=True)
                 test_gen_batch = test_batch.pop(
                     batch_keys=["input_ids", "attention_mask", "position_ids"],
                     non_tensor_batch_keys=["raw_prompt_ids"],
